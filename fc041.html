@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<!-- saved from url=(0051)https://esrapmkc.github.io/fortune-cookie/fc01.html -->
+<html lang="en" style="--vh: 6.95px;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Fortune Cookie</title>
+  <link rel="icon" type="image/png" href="https://esrapmkc.github.io/fortune-cookie/favicon.png">
+
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family: Georgia, serif; overflow:hidden; background:#0a0a1a;}
+
+    .container{
+      position:fixed; inset:0;
+      width:100%;
+      height:calc(var(--vh, 1vh) * 100);
+      min-height:100svh;
+      transition: background 1.5s ease;
+    }
+
+    .night-sky{
+      background:
+        radial-gradient(900px 650px at 20% 25%, rgba(120,110,255,.18), transparent 60%),
+        radial-gradient(800px 600px at 80% 35%, rgba(80,170,255,.12), transparent 62%),
+        radial-gradient(1000px 800px at 55% 90%, rgba(0,0,0,.6), transparent 65%),
+        linear-gradient(to bottom, #070718 0%, #0f1230 50%, #101a3a 100%);
+    }
+    .day-sky{
+      background:
+        radial-gradient(900px 650px at 25% 18%, rgba(255,255,220,.55), transparent 55%),
+        radial-gradient(900px 650px at 70% 70%, rgba(255,255,255,.20), transparent 60%),
+        linear-gradient(to bottom,#87CEEB 0%,#BDEBFF 35%,#E7F8FF 70%,#F7FDFF 100%);
+    }
+
+    /* Stars */
+    .stars{position:absolute; inset:0; pointer-events:none; transition:opacity 1.2s ease; opacity:.80;}
+    .star{position:absolute; background:white; border-radius:50%; opacity:0; animation: twinkle 3s infinite ease-in-out; filter: blur(.2px);}
+    @keyframes twinkle{0%,100%{opacity:.18;transform:scale(1)}50%{opacity:.65;transform:scale(1.15)}}
+
+    /* Sunlight */
+    .sunlight{position:absolute; inset:0; opacity:0; pointer-events:none; transition:opacity 1.5s ease;}
+    .sunlight.visible{opacity:1}
+    .sun-ray{position:absolute; background: radial-gradient(circle, rgba(255,255,200,0.30) 0%, transparent 70%); border-radius:50%; animation:pulse 5s infinite ease-in-out; filter: blur(.2px);}
+    @keyframes pulse{0%,100%{transform:scale(1);opacity:.25}50%{transform:scale(1.08);opacity:.55}}
+
+    /* Clouds (geri geldi) */
+    .cloud{
+      position:absolute;
+      background: rgba(255,255,255,.55);
+      border-radius:100px;
+      opacity:0;
+      transition: opacity 1.2s ease;
+      animation: float 20s infinite ease-in-out;
+      filter: blur(.2px);
+    }
+    .cloud::before,.cloud::after{
+      content:'';
+      position:absolute;
+      background: rgba(255,255,255,.55);
+      border-radius:100px;
+    }
+    .cloud::before{width:50px;height:50px;top:-25px;left:10px}
+    .cloud::after{width:60px;height:60px;top:-30px;right:10px}
+    @keyframes float{
+      0%,100%{ transform: translateX(0) translateY(0); }
+      50%{ transform: translateX(30px) translateY(-10px); }
+    }
+
+    /* ====== LAYOUT: her şey fixed, reflow yok ====== */
+    :root{
+      /* Kurabiye büyük, yazı daha yukarı */
+      --cookieStageW: min(920px, 98vw);
+      --cookieScale: 1.38;            /* Canva SVG boşluğunu telafi eder */
+      --cookieLift: -52px;            /* kurabiye biraz yukarı */
+      --paperOffset: 205px;           /* merkezden aşağı: yazı kurabiyeye yakın */
+    }
+
+    .center{
+      position:fixed; inset:0;
+      display:block;
+    }
+
+    .subtitle{
+      position:fixed;
+      left:50%;
+      top: 34px;
+      transform: translateX(-50%);
+      font-size:13px;
+      opacity:.84;
+      color:#f5f7ff;
+      text-align:center;
+      pointer-events:none;
+    }
+    body.day .subtitle{ color:#0b1220; }
+
+    .cookieBtn{
+      position:fixed;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%) translateY(var(--cookieLift));
+      border:0;
+      background:transparent;
+      cursor:pointer;
+      padding:0;
+      -webkit-tap-highlight-color: transparent;
+      user-select:none;
+      touch-action: manipulation;
+    }
+
+    .cookieStage{
+      position:relative;
+      width: var(--cookieStageW);
+      aspect-ratio: 4 / 3;
+      filter: drop-shadow(0 18px 42px rgba(0,0,0,0.45));
+    }
+
+    /* Canva SVG’ler (WHITESPACE TELAFİSİ = scale) */
+    .cookieImg{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:100%;
+      height:auto;
+      opacity:0;
+      transform: translate(-50%,-50%) scale(var(--cookieScale));
+      transition: transform 1.6s ease, opacity 0.9s ease, filter 0.9s ease;
+      will-change: transform, opacity;
+    }
+    .cookieClosed{opacity:1;}
+    .cookieOpen{opacity:0; transform: translate(-50%,-50%) scale(calc(var(--cookieScale) * 0.98));}
+
+    /* Kırılma/swap */
+    body.opening .cookieClosed{
+      transform: translate(-50%,-50%) scale(calc(var(--cookieScale) * 1.03)) rotate(-1.2deg);
+      filter: blur(.2px);
+    }
+    body.cracked .cookieClosed{
+      opacity:0;
+      transform: translate(-50%,-50%) scale(calc(var(--cookieScale) * 0.98));
+    }
+    body.cracked .cookieOpen{
+      opacity:1;
+      transform: translate(-50%,-50%) scale(var(--cookieScale));
+    }
+
+    /* Fortune paper: BAŞTAN BERİ MERKEZE BAĞLI, ZIPLAMA YOK */
+    .fortune-paper{
+      position:fixed;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%) translateY(var(--paperOffset)) translateY(10px) scale(.985);
+      background: linear-gradient(to bottom, #FFF9E6 0%, #FFF5D6 100%);
+      padding: 34px 42px;
+      border-radius: 12px;
+      box-shadow: 0 18px 42px rgba(0,0,0,0.22);
+      opacity:0;
+      transition: transform 1.0s ease, opacity 1.0s ease;
+      max-width: min(920px, 92vw);
+      color:#1f2f3f;
+      text-align:center;
+      pointer-events:none;
+    }
+    body.showMessage .fortune-paper{
+      opacity:1;
+      transform: translate(-50%,-50%) translateY(var(--paperOffset)) scale(1);
+    }
+
+    .fortune-text{
+      font-size: 34px;
+      font-style: italic;
+      line-height: 1.55;
+      font-weight: 520;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.10);
+    }
+
+    /* Crumbs */
+    .crumb{position:absolute; border-radius:50%; opacity:0; pointer-events:none; box-shadow:0 2px 4px rgba(0,0,0,0.2); z-index:30;}
+    @keyframes crumb-fall{
+      0%{transform:translate(0,0) rotate(0deg) scale(1);opacity:0}
+      10%{opacity:1}
+      100%{transform:translate(var(--tx), var(--ty)) rotate(720deg) scale(0.65);opacity:0}
+    }
+
+    /* Responsive tuning (Android için yazı yukarı kalsın) */
+    @media (max-width: 768px){
+      :root{
+        --cookieStageW: min(1050px, 99vw);
+        --cookieScale: 1.75;
+        --cookieLift: -40px;
+        --paperOffset: 170px;
+      }
+      .fortune-text{font-size:26px;}
+      .fortune-paper{padding:26px 28px;}
+    }
+    @media (max-width: 480px){
+      :root{
+        --cookieStageW: min(1100px, 99vw);
+        --cookieScale: 1.85;
+        --cookieLift: -34px;
+        --paperOffset: 160px;
+      }
+      .fortune-text{font-size:22px;}
+      .fortune-paper{padding:22px 24px;}
+    }
+  </style>
+<script type="text/javascript" src="chrome-extension://aggiiclaiamajehmlfpkjmlbadmkledi/popup.js" async=""></script><script type="text/javascript" src="chrome-extension://aggiiclaiamajehmlfpkjmlbadmkledi/tat_popup.js" async=""></script></head>
+
+<body>
+  <div class="container night-sky" id="background">
+    <div class="stars" id="stars"><div class="star" style="width: 1.99382px; height: 1.99382px; left: 37.3509%; top: 88.801%; animation-delay: 1.04941s;"></div><div class="star" style="width: 2.08232px; height: 2.08232px; left: 7.89152%; top: 88.8459%; animation-delay: 1.37337s;"></div><div class="star" style="width: 1.34502px; height: 1.34502px; left: 48.9109%; top: 40.2285%; animation-delay: 0.50738s;"></div><div class="star" style="width: 2.53239px; height: 2.53239px; left: 20.9848%; top: 22.9254%; animation-delay: 1.86947s;"></div><div class="star" style="width: 2.32338px; height: 2.32338px; left: 93.406%; top: 98.27%; animation-delay: 1.62479s;"></div><div class="star" style="width: 1.41498px; height: 1.41498px; left: 7.93259%; top: 31.6713%; animation-delay: 1.69914s;"></div><div class="star" style="width: 2.63061px; height: 2.63061px; left: 77.868%; top: 30.4834%; animation-delay: 0.901284s;"></div><div class="star" style="width: 2.20869px; height: 2.20869px; left: 43.5623%; top: 35.5335%; animation-delay: 1.46375s;"></div><div class="star" style="width: 1.54216px; height: 1.54216px; left: 34.3969%; top: 80.5881%; animation-delay: 0.919808s;"></div><div class="star" style="width: 1.96928px; height: 1.96928px; left: 39.0773%; top: 60.2618%; animation-delay: 0.148331s;"></div><div class="star" style="width: 1.23716px; height: 1.23716px; left: 70.5854%; top: 59.4024%; animation-delay: 2.76094s;"></div><div class="star" style="width: 1.90247px; height: 1.90247px; left: 72.628%; top: 76.8955%; animation-delay: 0.495689s;"></div><div class="star" style="width: 1.13306px; height: 1.13306px; left: 52.9383%; top: 13.088%; animation-delay: 0.504719s;"></div><div class="star" style="width: 2.90716px; height: 2.90716px; left: 78.3131%; top: 59.4842%; animation-delay: 0.455443s;"></div><div class="star" style="width: 2.46109px; height: 2.46109px; left: 51.7446%; top: 60.0277%; animation-delay: 1.38522s;"></div><div class="star" style="width: 1.87027px; height: 1.87027px; left: 34.2857%; top: 84.5014%; animation-delay: 2.14196s;"></div><div class="star" style="width: 2.14484px; height: 2.14484px; left: 12.8086%; top: 66.7216%; animation-delay: 2.30509s;"></div><div class="star" style="width: 2.6285px; height: 2.6285px; left: 64.9018%; top: 54.6306%; animation-delay: 0.811186s;"></div><div class="star" style="width: 2.28112px; height: 2.28112px; left: 45.443%; top: 37.9579%; animation-delay: 0.747416s;"></div><div class="star" style="width: 1.25011px; height: 1.25011px; left: 14.9044%; top: 72.8664%; animation-delay: 2.53395s;"></div><div class="star" style="width: 1.43079px; height: 1.43079px; left: 0.218224%; top: 28.7679%; animation-delay: 2.73734s;"></div><div class="star" style="width: 1.40792px; height: 1.40792px; left: 86.683%; top: 78.8876%; animation-delay: 0.556095s;"></div><div class="star" style="width: 1.39954px; height: 1.39954px; left: 23.5517%; top: 71.122%; animation-delay: 0.00052984s;"></div><div class="star" style="width: 1.86506px; height: 1.86506px; left: 55.9954%; top: 15.6778%; animation-delay: 2.44917s;"></div><div class="star" style="width: 2.11927px; height: 2.11927px; left: 35.6962%; top: 43.3692%; animation-delay: 0.799516s;"></div><div class="star" style="width: 2.71038px; height: 2.71038px; left: 34.3912%; top: 11.723%; animation-delay: 0.0855733s;"></div><div class="star" style="width: 2.40826px; height: 2.40826px; left: 74.5787%; top: 78.5589%; animation-delay: 0.890485s;"></div><div class="star" style="width: 2.23263px; height: 2.23263px; left: 43.2313%; top: 32.5845%; animation-delay: 1.2468s;"></div><div class="star" style="width: 1.62984px; height: 1.62984px; left: 81.9063%; top: 17.2279%; animation-delay: 2.62555s;"></div><div class="star" style="width: 1.4236px; height: 1.4236px; left: 12.5183%; top: 96.4314%; animation-delay: 0.822829s;"></div><div class="star" style="width: 1.54508px; height: 1.54508px; left: 18.828%; top: 27.9649%; animation-delay: 2.00752s;"></div><div class="star" style="width: 1.81267px; height: 1.81267px; left: 48.592%; top: 79.4726%; animation-delay: 1.6294s;"></div><div class="star" style="width: 1.13559px; height: 1.13559px; left: 41.2139%; top: 84.8823%; animation-delay: 1.55071s;"></div><div class="star" style="width: 1.3479px; height: 1.3479px; left: 84.9027%; top: 4.2187%; animation-delay: 2.14856s;"></div><div class="star" style="width: 2.49917px; height: 2.49917px; left: 96.1722%; top: 35.343%; animation-delay: 2.8134s;"></div><div class="star" style="width: 1.01011px; height: 1.01011px; left: 45.8274%; top: 62.678%; animation-delay: 2.50235s;"></div><div class="star" style="width: 1.05214px; height: 1.05214px; left: 4.36712%; top: 33.2344%; animation-delay: 0.515136s;"></div><div class="star" style="width: 1.46827px; height: 1.46827px; left: 95.7601%; top: 91.7975%; animation-delay: 0.0629897s;"></div><div class="star" style="width: 1.28751px; height: 1.28751px; left: 65.8989%; top: 91.5071%; animation-delay: 2.553s;"></div><div class="star" style="width: 1.50459px; height: 1.50459px; left: 36.9362%; top: 61.0788%; animation-delay: 1.74589s;"></div><div class="star" style="width: 1.60782px; height: 1.60782px; left: 3.62071%; top: 58.3006%; animation-delay: 0.431271s;"></div><div class="star" style="width: 1.3511px; height: 1.3511px; left: 99.651%; top: 84.8365%; animation-delay: 0.96531s;"></div><div class="star" style="width: 2.67134px; height: 2.67134px; left: 56.9423%; top: 0.583855%; animation-delay: 1.27503s;"></div><div class="star" style="width: 1.85951px; height: 1.85951px; left: 91.5063%; top: 90.7342%; animation-delay: 2.12584s;"></div><div class="star" style="width: 1.20564px; height: 1.20564px; left: 85.2003%; top: 59.0437%; animation-delay: 0.653425s;"></div><div class="star" style="width: 2.52229px; height: 2.52229px; left: 2.85008%; top: 97.656%; animation-delay: 2.23177s;"></div><div class="star" style="width: 2.11459px; height: 2.11459px; left: 62.8554%; top: 87.0866%; animation-delay: 1.56992s;"></div><div class="star" style="width: 1.57697px; height: 1.57697px; left: 98.7898%; top: 73.7761%; animation-delay: 1.46033s;"></div><div class="star" style="width: 2.4249px; height: 2.4249px; left: 18.7052%; top: 95.9213%; animation-delay: 0.593868s;"></div><div class="star" style="width: 2.19007px; height: 2.19007px; left: 18.0298%; top: 4.55678%; animation-delay: 1.68087s;"></div><div class="star" style="width: 2.8732px; height: 2.8732px; left: 31.1562%; top: 28.9917%; animation-delay: 0.821411s;"></div><div class="star" style="width: 1.98326px; height: 1.98326px; left: 56.3998%; top: 52.7523%; animation-delay: 2.61016s;"></div><div class="star" style="width: 2.39423px; height: 2.39423px; left: 0.849133%; top: 25.8934%; animation-delay: 0.460172s;"></div><div class="star" style="width: 1.4681px; height: 1.4681px; left: 93.6419%; top: 74.0243%; animation-delay: 2.85067s;"></div><div class="star" style="width: 1.42283px; height: 1.42283px; left: 92.1899%; top: 89.987%; animation-delay: 2.50522s;"></div><div class="star" style="width: 2.87966px; height: 2.87966px; left: 40.6984%; top: 66.9662%; animation-delay: 2.64633s;"></div><div class="star" style="width: 1.20184px; height: 1.20184px; left: 38.9574%; top: 15.7677%; animation-delay: 0.321766s;"></div><div class="star" style="width: 1.26384px; height: 1.26384px; left: 10.4732%; top: 38.6486%; animation-delay: 2.01221s;"></div><div class="star" style="width: 1.26834px; height: 1.26834px; left: 79.017%; top: 9.2164%; animation-delay: 0.354347s;"></div><div class="star" style="width: 2.26162px; height: 2.26162px; left: 34.1541%; top: 39.7413%; animation-delay: 1.6366s;"></div><div class="star" style="width: 2.75711px; height: 2.75711px; left: 19.6063%; top: 51.6678%; animation-delay: 1.35282s;"></div><div class="star" style="width: 2.85665px; height: 2.85665px; left: 53.2849%; top: 15.8309%; animation-delay: 1.70633s;"></div><div class="star" style="width: 2.23973px; height: 2.23973px; left: 24.0176%; top: 70.2158%; animation-delay: 2.99296s;"></div><div class="star" style="width: 2.84737px; height: 2.84737px; left: 61.7521%; top: 27.1309%; animation-delay: 1.49912s;"></div><div class="star" style="width: 1.10909px; height: 1.10909px; left: 20.6671%; top: 0.0872877%; animation-delay: 1.74594s;"></div><div class="star" style="width: 1.93153px; height: 1.93153px; left: 86.8%; top: 8.92477%; animation-delay: 2.61753s;"></div><div class="star" style="width: 1.08428px; height: 1.08428px; left: 60.7206%; top: 58.7509%; animation-delay: 1.00742s;"></div><div class="star" style="width: 2.92356px; height: 2.92356px; left: 14.4916%; top: 30.9724%; animation-delay: 0.362162s;"></div><div class="star" style="width: 1.17119px; height: 1.17119px; left: 22.351%; top: 58.1739%; animation-delay: 2.94251s;"></div><div class="star" style="width: 1.03267px; height: 1.03267px; left: 46.0839%; top: 49.5343%; animation-delay: 0.237532s;"></div><div class="star" style="width: 2.10123px; height: 2.10123px; left: 44.1137%; top: 38.1593%; animation-delay: 2.0576s;"></div><div class="star" style="width: 2.48997px; height: 2.48997px; left: 83.1998%; top: 78.4542%; animation-delay: 1.5021s;"></div><div class="star" style="width: 1.71635px; height: 1.71635px; left: 45.1567%; top: 30.5713%; animation-delay: 2.53052s;"></div><div class="star" style="width: 1.54685px; height: 1.54685px; left: 43.0162%; top: 77.003%; animation-delay: 1.62368s;"></div><div class="star" style="width: 1.2042px; height: 1.2042px; left: 33.3227%; top: 80.9829%; animation-delay: 0.136378s;"></div><div class="star" style="width: 2.92984px; height: 2.92984px; left: 17.1633%; top: 98.2899%; animation-delay: 1.8089s;"></div><div class="star" style="width: 1.6175px; height: 1.6175px; left: 66.7949%; top: 33.1052%; animation-delay: 2.99933s;"></div><div class="star" style="width: 1.53888px; height: 1.53888px; left: 82.408%; top: 34.2608%; animation-delay: 1.22213s;"></div><div class="star" style="width: 2.47959px; height: 2.47959px; left: 69.5216%; top: 42.0563%; animation-delay: 1.35144s;"></div><div class="star" style="width: 1.10737px; height: 1.10737px; left: 20.2691%; top: 68.0805%; animation-delay: 0.800308s;"></div><div class="star" style="width: 2.10227px; height: 2.10227px; left: 20.6053%; top: 97.5429%; animation-delay: 1.37726s;"></div><div class="star" style="width: 2.88374px; height: 2.88374px; left: 28.1684%; top: 43.2031%; animation-delay: 2.54679s;"></div><div class="star" style="width: 1.90571px; height: 1.90571px; left: 24.309%; top: 85.2029%; animation-delay: 1.5366s;"></div><div class="star" style="width: 2.11556px; height: 2.11556px; left: 82.722%; top: 40.1529%; animation-delay: 2.9877s;"></div><div class="star" style="width: 2.49172px; height: 2.49172px; left: 87.1317%; top: 88.5999%; animation-delay: 2.94293s;"></div><div class="star" style="width: 2.23326px; height: 2.23326px; left: 87.3618%; top: 45.6279%; animation-delay: 0.881871s;"></div><div class="star" style="width: 1.3863px; height: 1.3863px; left: 39.0503%; top: 80.0463%; animation-delay: 0.314424s;"></div><div class="star" style="width: 1.59689px; height: 1.59689px; left: 73.4658%; top: 21.5436%; animation-delay: 1.66292s;"></div><div class="star" style="width: 1.1331px; height: 1.1331px; left: 73.0823%; top: 24.6263%; animation-delay: 1.44618s;"></div><div class="star" style="width: 2.93247px; height: 2.93247px; left: 61.4216%; top: 62.8072%; animation-delay: 2.87352s;"></div></div>
+    <div class="sunlight" id="sunlight"><div class="sun-ray" style="width: 363.621px; height: 363.621px; left: 69.2441%; top: 0.954355%; animation-delay: 2.51175s;"></div><div class="sun-ray" style="width: 304.32px; height: 304.32px; left: 8.61152%; top: 50.1208%; animation-delay: 4.02973s;"></div><div class="sun-ray" style="width: 260.215px; height: 260.215px; left: 32.0257%; top: 68.7114%; animation-delay: 1.83817s;"></div><div class="sun-ray" style="width: 410.819px; height: 410.819px; left: 69.0692%; top: 27.2454%; animation-delay: 4.1096s;"></div><div class="sun-ray" style="width: 293.461px; height: 293.461px; left: 31.7621%; top: 1.69119%; animation-delay: 2.01691s;"></div><div class="sun-ray" style="width: 435.983px; height: 435.983px; left: 20.5114%; top: 97.2262%; animation-delay: 4.82296s;"></div><div class="sun-ray" style="width: 386.928px; height: 386.928px; left: 47.4952%; top: 60.2808%; animation-delay: 2.70054s;"></div><div class="sun-ray" style="width: 180.282px; height: 180.282px; left: 53.7091%; top: 6.99762%; animation-delay: 1.76244s;"></div><div class="sun-ray" style="width: 247.099px; height: 247.099px; left: 8.32653%; top: 67.4823%; animation-delay: 2.80684s;"></div><div class="sun-ray" style="width: 164.972px; height: 164.972px; left: 95.4257%; top: 68.5435%; animation-delay: 2.61492s;"></div><div class="sun-ray" style="width: 343.814px; height: 343.814px; left: 73.7451%; top: 38.2026%; animation-delay: 1.87248s;"></div><div class="sun-ray" style="width: 439.949px; height: 439.949px; left: 54.2047%; top: 37.7828%; animation-delay: 3.9926s;"></div><div class="cloud" style="width: 97.1366px; height: 35.8739px; left: 51.3044%; top: 46.8729%; animation-delay: 2.99321s; animation-duration: 18.3225s;"></div><div class="cloud" style="width: 65.5712px; height: 50.4049px; left: 15.5752%; top: 38.3577%; animation-delay: 9.33298s; animation-duration: 15.6461s;"></div><div class="cloud" style="width: 67.0987px; height: 44.6542px; left: 17.5593%; top: 29.4763%; animation-delay: 8.61751s; animation-duration: 22.4423s;"></div><div class="cloud" style="width: 121.837px; height: 44.716px; left: 29.9594%; top: 12.5721%; animation-delay: 2.01496s; animation-duration: 20.3119s;"></div><div class="cloud" style="width: 83.5417px; height: 27.6749px; left: 63.6665%; top: 13.6714%; animation-delay: 1.99639s; animation-duration: 24.6391s;"></div></div>
+
+    <div class="center">
+      <div class="subtitle">Tap once. Receive one message.</div>
+
+      <button class="cookieBtn" id="cookieBtn" aria-label="Open the fortune cookie">
+        <div class="cookieStage" id="cookieStage">
+          <img class="cookieImg cookieClosed" src="./Your Fortune Cookie1_files/cookie-closed.svg" alt="Fortune cookie closed">
+          <img class="cookieImg cookieOpen" src="./Your Fortune Cookie1_files/cookie-open.svg" alt="Fortune cookie opened">
+        </div>
+      </button>
+
+      <div class="fortune-paper" id="fortunePaper">
+        <p class="fortune-text" id="fortuneText">Your lucky break is closer than you think.</p>
+      </div>
+
+      <audio id="audioCrack" preload="auto" src="cookie-crack.mp3"></audio>
+      <audio id="audioPaper" preload="auto" src="paper-rustle.mp3"></audio>
+    </div>
+  </div>
+
+<script>
+  // Stars
+  const starsContainer = document.getElementById('stars');
+  for(let i=0;i<90;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    const size=Math.random()*2+1;
+    s.style.width=size+'px';
+    s.style.height=size+'px';
+    s.style.left=Math.random()*100+'%';
+    s.style.top=Math.random()*100+'%';
+    s.style.animationDelay=Math.random()*3+'s';
+    starsContainer.appendChild(s);
+  }
+
+  // Sun rays + clouds
+  const sunlightContainer = document.getElementById('sunlight');
+  for(let i=0;i<12;i++){
+    const ray=document.createElement('div');
+    ray.className='sun-ray';
+    const size=Math.random()*320+160;
+    ray.style.width=size+'px';
+    ray.style.height=size+'px';
+    ray.style.left=Math.random()*100+'%';
+    ray.style.top=Math.random()*100+'%';
+    ray.style.animationDelay=Math.random()*5+'s';
+    sunlightContainer.appendChild(ray);
+  }
+  for(let i=0;i<5;i++){
+    const cloud=document.createElement('div');
+    cloud.className='cloud';
+    cloud.style.width=(Math.random()*80+60)+'px';
+    cloud.style.height=(Math.random()*30+25)+'px';
+    cloud.style.left=Math.random()*100+'%';
+    cloud.style.top=(Math.random()*55+10)+'%';
+    cloud.style.animationDelay=(Math.random()*10)+'s';
+    cloud.style.animationDuration=(Math.random()*10+15)+'s';
+    sunlightContainer.appendChild(cloud);
+  }
+
+  const cookieBtn = document.getElementById('cookieBtn');
+  const cookieStage = document.getElementById('cookieStage');
+  const background = document.getElementById('background');
+
+  const audioCrack = document.getElementById('audioCrack');
+  const audioPaper = document.getElementById('audioPaper');
+
+  let opened=false;
+
+  function safePlay(a){
+    try{
+      a.currentTime=0;
+      const p=a.play();
+      if(p && typeof p.catch==="function") p.catch(()=>{});
+    }catch(e){}
+  }
+
+  function createCrumbs(){
+    const colors=['#E8B968','#DDB56A','#D4A259','#C9A355','#B8944D'];
+    const rect=cookieStage.getBoundingClientRect();
+    const originX=rect.left+rect.width/2;
+    const originY=rect.top+rect.height/2+10;
+
+    for(let i=0;i<55;i++){
+      const c=document.createElement('div');
+      c.className='crumb';
+
+      const size=Math.random()*10+4;
+      c.style.width=size+'px';
+      c.style.height=size+'px';
+      c.style.left=originX+'px';
+      c.style.top=originY+'px';
+      c.style.background=colors[Math.floor(Math.random()*colors.length)];
+
+      const tx=(Math.random()-0.5)*520;
+      const ty=Math.random()*420+220;
+      c.style.setProperty('--tx', tx+'px');
+      c.style.setProperty('--ty', ty+'px');
+
+      const dur=Math.random()*1.1+2.2;
+      c.style.animation=`crumb-fall ${dur}s ease-out forwards`;
+      c.style.animationDelay=(Math.random()*0.25)+'s';
+
+      document.body.appendChild(c);
+      setTimeout(()=>c.remove(), 4200);
+    }
+  }
+
+  cookieBtn.addEventListener('click', ()=>{
+    if(opened) return;
+    opened=true;
+
+    document.body.classList.add('opening');
+
+    safePlay(audioCrack);
+    setTimeout(()=>safePlay(audioPaper), 650);
+
+    createCrumbs();
+
+    setTimeout(()=>{
+      background.classList.remove('night-sky');
+      background.classList.add('day-sky');
+      starsContainer.style.opacity='0';
+      sunlightContainer.classList.add('visible');
+
+      // clouds visible
+      sunlightContainer.querySelectorAll('.cloud').forEach(cl=>cl.style.opacity='1');
+
+      document.body.classList.add('day');
+    }, 520);
+
+    setTimeout(()=> document.body.classList.add('cracked'), 900);
+    setTimeout(()=> document.body.classList.add('showMessage'), 1700);
+  });
+  function setVH(){
+  const vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty('--vh', `${vh}px`);
+}
+setVH();
+window.addEventListener('resize', setVH);
+window.addEventListener('orientationchange', setVH);
+
+// Daha da stabil: Chrome address bar hareketleri için
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', setVH);
+}
+
+</script>
+
+
+</body><template id="transover-popup-template"></template><template id="transover-tat-popup-template"></template></html>
