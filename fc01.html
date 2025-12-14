@@ -1,308 +1,432 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fortune Cookie</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Fortune Cookie</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<style>
-:root{
-  --nightA:#040514;
-  --nightB:#070b2a;
-  --nightC:#02020a;
+        body {
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+            cursor: default;
+        }
 
-  --dayA:#8fd7ff;
-  --dayB:#dff4ff;
-  --dayC:#f7fdff;
+        .container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            transition: background 1.5s ease;
+        }
 
-  --text:#f5f7ff;
-  --ink:#0b1220;
+        /* Gece gökyüzü arka plan */
+        .night-sky {
+            background: linear-gradient(to bottom, #0a0a1a 0%, #1a1a2e 50%, #16213e 100%);
+        }
 
-  --paper:#fffdf7;
-  --shadow: rgba(0,0,0,.28);
-}
+        /* Gündüz gökyüzü arka plan */
+        .day-sky {
+            background: linear-gradient(to bottom, 
+                #87CEEB 0%, 
+                #B0E2FF 30%, 
+                #E0F6FF 60%, 
+                #F0F8FF 100%);
+        }
 
-/* reset */
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto}
-button{font:inherit}
+        /* Yıldızlar */
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
 
-/* stage */
-body{
-  min-height:100vh;
-  display:grid;
-  place-items:center;
-  overflow:hidden;
-  color:var(--text);
-  background:
-    radial-gradient(900px 650px at 20% 20%, rgba(120,110,255,.18), transparent 58%),
-    radial-gradient(1000px 800px at 85% 30%, rgba(70,170,255,.10), transparent 60%),
-    radial-gradient(1100px 900px at 55% 90%, rgba(0,0,0,.55), transparent 62%),
-    linear-gradient(180deg,var(--nightB),var(--nightA),var(--nightC));
-  transition: background 1100ms ease;
-}
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite ease-in-out;
+            opacity: 0;
+        }
 
-/* premium bokeh/nebula (yıldızsız) */
-.nebula{
-  position:absolute; inset:-30%;
-  pointer-events:none;
-  opacity:.95;
-  background:
-    radial-gradient(520px 380px at 22% 32%, rgba(170,140,255,.14), transparent 60%),
-    radial-gradient(560px 420px at 78% 26%, rgba(120,210,255,.12), transparent 62%),
-    radial-gradient(650px 520px at 56% 78%, rgba(0,0,0,.55), transparent 65%),
-    radial-gradient(420px 320px at 50% 45%, rgba(255,255,255,.05), transparent 60%);
-  filter: blur(1.2px) saturate(1.2);
-  animation: floatNebula 12s ease-in-out infinite;
-}
-@keyframes floatNebula{
-  0%,100%{ transform: translate(0,0) scale(1); }
-  50%{ transform: translate(14px,-10px) scale(1.02); }
-}
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.2); }
+        }
 
-/* very subtle grain */
-.grain{
-  position:absolute; inset:-25%;
-  pointer-events:none;
-  opacity:.06;
-  background:
-    repeating-linear-gradient(0deg, rgba(255,255,255,.12) 0 1px, transparent 2px 5px),
-    repeating-linear-gradient(90deg, rgba(0,0,0,.10) 0 1px, transparent 2px 6px);
-  mix-blend-mode: overlay;
-  filter: blur(.6px);
-}
+        /* Güneş ışıkları */
+        .sunlight {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.5s ease;
+        }
 
-/* sun rays for open */
-.sunrays{
-  position:absolute; inset:-40%;
-  pointer-events:none;
-  opacity:0;
-  transition: opacity 900ms ease;
-  background:
-    conic-gradient(from 215deg at 30% 18%,
-      rgba(255,255,255,0) 0deg,
-      rgba(255,255,255,.22) 16deg,
-      rgba(255,255,255,0) 34deg,
-      rgba(255,255,255,.18) 54deg,
-      rgba(255,255,255,0) 78deg,
-      rgba(255,255,255,.14) 100deg,
-      rgba(255,255,255,0) 150deg,
-      rgba(255,255,255,.16) 180deg,
-      rgba(255,255,255,0) 360deg);
-  filter: blur(1px);
-}
+        .sunlight.visible {
+            opacity: 1;
+        }
 
-/* center */
-.wrap{
-  position:relative;
-  z-index:2;
-  width:min(720px,94vw);
-  padding:22px 14px;
-  display:grid;
-  gap:14px;
-  justify-items:center;
-  text-align:center;
-}
+        .sun-ray {
+            position: absolute;
+            background: radial-gradient(circle, rgba(255,255,200,0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulse 5s infinite ease-in-out;
+        }
 
-.subtitle{
-  font-size:13px;
-  opacity:.82;
-}
+        /* Bulutlar */
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 100px;
+            opacity: 0;
+            transition: opacity 1.5s ease;
+            animation: float 20s infinite ease-in-out;
+        }
 
-/* cookie */
-.cookieBtn{
-  background:none; border:0;
-  cursor:pointer;
-  -webkit-tap-highlight-color: transparent;
-  user-select:none;
-  touch-action: manipulation;
-  padding:0;
-}
+        .cloud::before,
+        .cloud::after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 100px;
+        }
 
-.cookieStage{
-  width:min(360px,80vw);
-  aspect-ratio: 4 / 3;
-  display:grid;
-  place-items:center;
-  position:relative;
-  filter: drop-shadow(0 22px 34px var(--shadow));
-}
+        .cloud::before {
+            width: 50px;
+            height: 50px;
+            top: -25px;
+            left: 10px;
+        }
 
-/* images */
-.cookieImg{
-  width:100%;
-  max-width:360px;
-  height:auto;
-  position:absolute;
-  left:50%; top:50%;
-  transform: translate(-50%,-50%);
-  opacity:0;
-  will-change: transform, opacity;
-}
+        .cloud::after {
+            width: 60px;
+            height: 60px;
+            top: -30px;
+            right: 10px;
+        }
 
-/* closed visible initially */
-.cookieClosed{ opacity:1; transition: opacity 220ms ease; }
+        @keyframes float {
+            0%, 100% { transform: translateX(0) translateY(0); }
+            50% { transform: translateX(30px) translateY(-10px); }
+        }
 
-/* open hidden initially */
-.cookieOpen{ opacity:0; }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.1); opacity: 0.6; }
+        }
 
-/* sound */
-.soundBtn{
-  border:1px solid rgba(255,255,255,.25);
-  background: rgba(255,255,255,.08);
-  color: var(--text);
-  padding:8px 14px;
-  border-radius:999px;
-  font-size:12px;
-  cursor:pointer;
-}
+        /* Kurabiye container */
+        .cookie-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
 
-/* paper */
-.paper{
-  width:min(520px,94vw);
-  background: linear-gradient(180deg,var(--paper),#fff);
-  color: var(--ink);
-  border-radius:18px;
-  padding:18px 16px;
-  box-shadow: 0 20px 34px rgba(0,0,0,.18);
-  border: 1px solid rgba(11,18,32,.10);
+        .cookie-container:hover {
+            transform: translate(-50%, -50%) scale(1.05);
+        }
 
-  opacity:0;
-  transform: translateY(14px) scale(.985);
-  transition: opacity 520ms ease, transform 520ms ease;
-}
+        .cookie-container.clicked {
+            cursor: default;
+        }
 
-.fortune{
-  margin:0;
-  font-weight:800;
-  font-size: clamp(18px, 3.2vw, 24px); /* ✅ daha büyük */
-  line-height: 1.35;
-}
-.hint{
-  margin-top:10px;
-  font-size:12px;
-  opacity:.7;
-}
+        /* Kurabiye SVG */
+        .cookie {
+            width: 300px;
+            height: 250px;
+            filter: drop-shadow(0 10px 30px rgba(0,0,0,0.4));
+        }
 
-/* OPENED background */
-body.opened{
-  color: var(--ink);
-  background:
-    radial-gradient(900px 650px at 28% 18%, rgba(255,255,255,.80), transparent 56%),
-    radial-gradient(1000px 800px at 70% 70%, rgba(255,255,255,.28), transparent 62%),
-    linear-gradient(180deg,var(--dayA),var(--dayB),var(--dayC));
-}
-body.opened .sunrays{ opacity:1; }
-body.opened .nebula{ opacity:.20; transition: opacity 900ms ease; }
-body.opened .grain{ opacity:.05; transition: opacity 900ms ease; }
-body.opened .soundBtn{
-  border-color: rgba(11,18,32,.14);
-  background: rgba(11,18,32,.06);
-  color: var(--ink);
-}
+        .cookie-half {
+            transition: all 1.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
 
-/* ✅ KIRILMA ANİMASYONU (YAVAŞ) */
-body.opening .cookieClosed{
-  opacity:0;
-}
-body.opening .cookieOpen{
-  opacity:1;
-  animation: openFloat 1100ms ease forwards; /* yavaş giriş */
-}
-@keyframes openFloat{
-  0%{ transform: translate(-50%,-50%) scale(.96); filter: blur(.3px); }
-  60%{ transform: translate(-50%,-50%) scale(1.00); filter: blur(0px); }
-  100%{ transform: translate(-50%,-50%) scale(1.00); }
-}
+        .cookie-container.cracked .cookie-left {
+            transform: translateX(-80px) rotate(-30deg);
+            opacity: 0;
+        }
 
-/* ✅ Yazı gecikmeli gelsin */
-body.showMessage .paper{
-  opacity:1;
-  transform: translateY(0) scale(1);
-}
+        .cookie-container.cracked .cookie-right {
+            transform: translateX(80px) rotate(30deg);
+            opacity: 0;
+        }
 
-/* motion reduce */
-@media (prefers-reduced-motion: reduce){
-  *{ animation:none !important; transition:none !important; }
-}
-</style>
+        /* Mesaj kağıdı */
+        .fortune-paper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0) rotate(-10deg);
+            background: linear-gradient(to bottom, #FFF9E6 0%, #FFF5D6 100%);
+            padding: 40px 50px;
+            border-radius: 10px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: all 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .fortune-paper.visible {
+            transform: translate(-50%, -50%) scale(1) rotate(0deg);
+            opacity: 1;
+        }
+
+        .fortune-text {
+            font-size: 32px;
+            color: #2c3e50;
+            font-style: italic;
+            line-height: 1.6;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            font-weight: 500;
+        }
+
+        /* Kırıntılar */
+        .crumb {
+            position: absolute;
+            background: linear-gradient(135deg, #E8B968 0%, #D4A259 100%);
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        @keyframes crumb-fall {
+            0% {
+                transform: translate(0, 0) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            20% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), 500px) rotate(720deg) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .cookie {
+                width: 250px;
+                height: 200px;
+            }
+
+            .fortune-text {
+                font-size: 24px;
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .cookie {
+                width: 200px;
+                height: 160px;
+            }
+
+            .fortune-text {
+                font-size: 20px;
+                padding: 25px 30px;
+            }
+        }
+    </style>
 </head>
-
 <body>
-  <div class="nebula" aria-hidden="true"></div>
-  <div class="grain" aria-hidden="true"></div>
-  <div class="sunrays" aria-hidden="true"></div>
+    <div class="container night-sky" id="background">
+        <!-- Yıldızlar -->
+        <div class="stars" id="stars"></div>
 
-  <main class="wrap">
-    <div class="subtitle">Tap once. Receive one message.</div>
+        <!-- Güneş ışıkları -->
+        <div class="sunlight" id="sunlight"></div>
 
-    <button class="cookieBtn" id="cookieBtn" aria-label="Open the fortune cookie">
-      <div class="cookieStage">
-        <!-- ✅ senin yükleyeceğin görseller -->
-        <img class="cookieImg cookieClosed" src="cookie-closed.png" alt="Fortune cookie closed">
-        <img class="cookieImg cookieOpen"   src="cookie-open.png"   alt="Fortune cookie opened">
-      </div>
-    </button>
+        <!-- Kurabiye -->
+        <div class="cookie-container" id="cookieContainer">
+            <svg class="cookie" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+                <!-- Sol yarım - Daha tombul kanatlar -->
+                <g class="cookie-half cookie-left">
+                    <!-- Ana kurabiye gövdesi - daha şişkin -->
+                    <path d="M150,90 Q145,70 135,65 Q125,60 115,65 Q105,70 95,80 L70,145 Q65,160 60,170 Q55,180 62,183 Q70,186 78,180 Q85,175 90,165 L130,100 Q140,85 150,90 Z" 
+                          fill="#E8A855" stroke="#D4942D" stroke-width="3" stroke-linejoin="round"/>
+                    
+                    <!-- Yan şişkinlik (tombulluk) -->
+                    <path d="M95,80 Q85,85 78,95 Q70,105 68,120 Q67,135 70,148 Q80,150 88,145 Q95,140 100,130 Q105,115 105,100 Q100,85 95,80" 
+                          fill="#F5C77E" opacity="0.5"/>
+                    
+                    <!-- İç katlama çizgisi (karakteristik kurabiye kırışığı) -->
+                    <path d="M145,88 Q135,95 125,105 Q115,120 108,135 Q103,148 100,160 L88,155 Q92,140 98,125 Q108,105 120,90 Q130,80 140,82 L145,88" 
+                          fill="#D4942D" opacity="0.4"/>
+                    
+                    <!-- Üst kenar vurgusu -->
+                    <path d="M150,90 Q145,75 135,68 Q130,66 125,68 L120,75 Q128,78 138,85 L148,88 L150,90" 
+                          fill="#F5C77E" opacity="0.7"/>
+                    
+                    <!-- Alt tombul kenar -->
+                    <path d="M78,180 Q73,182 68,180 Q65,177 66,173 L72,173 Q75,175 78,180" 
+                          fill="#B87A2F" opacity="0.6"/>
+                    
+                    <!-- Kurabiye dokusu noktaları -->
+                    <circle cx="100" cy="110" r="2.5" fill="#B87A2F" opacity="0.6"/>
+                    <circle cx="115" cy="125" r="2" fill="#B87A2F" opacity="0.5"/>
+                    <circle cx="85" cy="140" r="2.5" fill="#B87A2F" opacity="0.6"/>
+                    <circle cx="95" cy="155" r="2" fill="#B87A2F" opacity="0.5"/>
+                    <circle cx="120" cy="95" r="2" fill="#B87A2F" opacity="0.5"/>
+                    <circle cx="90" cy="115" r="1.8" fill="#B87A2F" opacity="0.5"/>
+                </g>
+                
+                <!-- Sağ yarım - Ayna görüntüsü, daha tombul -->
+                <g class="cookie-half cookie-right">
+                    <!-- Ana kurabiye gövdesi - daha şişkin -->
+                    <path d="M150,90 Q155,70 165,65 Q175,60 185,65 Q195,70 205,80 L230,145 Q235,160 240,170 Q245,180 238,183 Q230,186 222,180 Q215,175 210,165 L170,100 Q160,85 150,90 Z" 
+                          fill="#E8A855" stroke="#D4942D" stroke-width="3" stroke-linejoin="round"/>
+                    
+                    <!-- Yan şişkinlik (tombulluk) -->
+                    <path d="M205,80 Q215,85 222,95 Q230,105 232,120 Q233,135 230,148 Q220,150 212,145 Q205,140 200,130 Q195,115 195,100 Q200,85 205,80" 
+                          fill="#F5C77E" opacity="0.5"/>
+                    
+                    <!-- İç katlama çizgisi -->
+                    <path d="M155,88 Q165,95 175,105 Q185,120 192,135 Q197,148 200,160 L212,155 Q208,140 202,125 Q192,105 180,90 Q170,80 160,82 L155,88" 
+                          fill="#D4942D" opacity="0.4"/>
+                    
+                    <!-- Üst kenar vurgusu -->
+                    <path d="M150,90 Q155,75 165,68 Q170,66 175,68 L180,75 Q172,78 162,85 L152,88 L150,90" 
+                          fill="#F5C77E" opacity="0.7"/>
+                    
+                    <!-- Alt tombul kenar -->
+                    <path d="M222,180 Q227,182 232,180 Q235,177 234,173 L228,173 Q225,175 222,180" 
+                          fill="#B87A2F" opacity="0.6"/>
+                    
+                    <!-- Kurabiye dokusu noktaları -->
+                    <circle cx="200" cy="110" r="2.5" fill="#B87A2F" opacity="0.6"/>
+                    <circle cx="185" cy="125" r="2" fill="#B87A2F" opacity="0.5"/>
+                    <circle cx="215" cy="140" r="2.5" fill="#B87A2F" opacity="0.6"/>
+                    <circle cx="205" cy="155" r="2" fill="#B87A2F" opacity="0.5"/>
+                    <circle cx="180" cy="95" r="2" fill="#B87A2F" opacity="0.5"/>
+                    <circle cx="210" cy="115" r="1.8" fill="#B87A2F" opacity="0.5"/>
+                </g>
+                
+                <!-- Beyaz kağıt kenarı (ortada) -->
+                <rect x="145" y="87" width="10" height="5" fill="#FFFEF7" opacity="0.9" rx="1"/>
+                <rect x="142" y="83" width="16" height="3" fill="#FFFEF7" opacity="0.7" rx="1"/>
+            </svg>
+        </div>
 
-    <button class="soundBtn" id="soundBtn" type="button" aria-pressed="true">🔊 Sound: ON</button>
+        <!-- Fortune kağıdı -->
+        <div class="fortune-paper" id="fortunePaper">
+            <p class="fortune-text" id="fortuneText">Your lucky break is closer than you think.</p>
+        </div>
+    </div>
 
-    <section class="paper" id="paper" aria-live="polite" aria-atomic="true">
-      <p class="fortune" id="fortuneText"></p>
-      <div class="hint">Refresh won’t change this message.</div>
-    </section>
+    <script>
+        // Yıldızları oluştur
+        const starsContainer = document.getElementById('stars');
+        for (let i = 0; i < 100; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.width = Math.random() * 3 + 1 + 'px';
+            star.style.height = star.style.width;
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            starsContainer.appendChild(star);
+        }
 
-    <audio id="audioCrack" preload="auto" src="cookie-crack.mp3"></audio>
-    <audio id="audioPaper" preload="auto" src="paper-rustle.mp3"></audio>
-  </main>
+        // Güneş ışıklarını oluştur
+        const sunlightContainer = document.getElementById('sunlight');
+        for (let i = 0; i < 12; i++) {
+            const ray = document.createElement('div');
+            ray.className = 'sun-ray';
+            const size = Math.random() * 300 + 150;
+            ray.style.width = size + 'px';
+            ray.style.height = size + 'px';
+            ray.style.left = Math.random() * 100 + '%';
+            ray.style.top = Math.random() * 100 + '%';
+            ray.style.animationDelay = Math.random() * 5 + 's';
+            sunlightContainer.appendChild(ray);
+        }
 
-<script>
-const FORTUNE_TEXT = "Your lucky break is closer than you think";
+        // Bulutları oluştur
+        for (let i = 0; i < 5; i++) {
+            const cloud = document.createElement('div');
+            cloud.className = 'cloud';
+            cloud.style.width = Math.random() * 80 + 60 + 'px';
+            cloud.style.height = Math.random() * 30 + 25 + 'px';
+            cloud.style.left = Math.random() * 100 + '%';
+            cloud.style.top = Math.random() * 60 + 10 + '%';
+            cloud.style.animationDelay = Math.random() * 10 + 's';
+            cloud.style.animationDuration = Math.random() * 10 + 15 + 's';
+            sunlightContainer.appendChild(cloud);
+        }
 
-const cookieBtn = document.getElementById("cookieBtn");
-const fortuneEl = document.getElementById("fortuneText");
-const soundBtn  = document.getElementById("soundBtn");
-const crack     = document.getElementById("audioCrack");
-const paper     = document.getElementById("audioPaper");
+        // Kurabiye tıklama
+        const cookieContainer = document.getElementById('cookieContainer');
+        const background = document.getElementById('background');
+        const fortunePaper = document.getElementById('fortunePaper');
+        const sunlight = document.getElementById('sunlight');
+        const stars = document.getElementById('stars');
 
-fortuneEl.textContent = FORTUNE_TEXT;
+        cookieContainer.addEventListener('click', function() {
+            if (this.classList.contains('clicked')) return;
+            
+            this.classList.add('clicked');
+            this.classList.add('cracked');
 
-let opened = false;
-let soundOn = true;
+            // Kurabiye kırıntıları efekti
+            createCrumbs();
 
-soundBtn.addEventListener("click", () => {
-  soundOn = !soundOn;
-  soundBtn.setAttribute("aria-pressed", String(soundOn));
-  soundBtn.textContent = soundOn ? "🔊 Sound: ON" : "🔇 Sound: OFF";
-});
+            // Arka planı değiştir
+            setTimeout(() => {
+                background.classList.remove('night-sky');
+                background.classList.add('day-sky');
+                stars.style.opacity = '0';
+                sunlight.classList.add('visible');
+                
+                // Bulutları göster
+                const clouds = sunlightContainer.querySelectorAll('.cloud');
+                clouds.forEach(cloud => {
+                    cloud.style.opacity = '1';
+                });
+            }, 400);
 
-function safePlay(a){
-  if(!soundOn) return;
-  try{
-    a.currentTime = 0;
-    const p = a.play();
-    if(p && typeof p.catch === "function") p.catch(()=>{});
-  }catch(e){}
-}
+            // Fortune kağıdını göster (daha geç)
+            setTimeout(() => {
+                fortunePaper.classList.add('visible');
+            }, 2400);
+        });
 
-cookieBtn.addEventListener("click", () => {
-  if(opened) return;
-  opened = true;
+        // Kurabiye kırıntıları oluştur
+        function createCrumbs() {
+            const crumbColors = ['#E8A855', '#DDB56A', '#D4942D', '#C9A355', '#B87A2F'];
+            for (let i = 0; i < 50; i++) {
+                const crumb = document.createElement('div');
+                crumb.className = 'crumb';
+                const size = Math.random() * 10 + 4;
+                crumb.style.width = size + 'px';
+                crumb.style.height = size + 'px';
+                crumb.style.left = '50%';
+                crumb.style.top = '50%';
+                crumb.style.background = crumbColors[Math.floor(Math.random() * crumbColors.length)];
+                
+                const tx = (Math.random() - 0.5) * 500;
+                const ty = Math.random() * 400 + 200;
+                crumb.style.setProperty('--tx', tx + 'px');
+                
+                crumb.style.animation = `crumb-fall ${Math.random() * 2 + 2}s ease-out forwards`;
+                crumb.style.animationDelay = Math.random() * 0.4 + 's';
+                document.body.appendChild(crumb);
 
-  // 1) background changes
-  document.body.classList.add("opened");
-
-  // 2) start opening animation (slow)
-  document.body.classList.add("opening");
-
-  // 3) sound timing
-  safePlay(crack);                 // çıtırdama
-  setTimeout(() => safePlay(paper), 650); // hışırtı biraz sonra
-
-  // 4) show paper AFTER the break (delay message)
-  setTimeout(() => {
-    document.body.classList.add("showMessage");
-  }, 1300); // ✅ yazı gecikmeli
-});
-</script>
+                setTimeout(() => crumb.remove(), 4500);
+            }
+        }
+    </script>
 </body>
 </html>
