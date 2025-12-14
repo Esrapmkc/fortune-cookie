@@ -6,50 +6,50 @@
   <title>Daily Fortune Cookie</title>
   <style>
     :root{
-      /* Night */
-      --night-1:#040612;
-      --night-2:#071033;
-      --night-3:#03030a;
+      --night1:#040514;
+      --night2:#050a24;
+      --night3:#02020a;
 
-      /* Day sky */
-      --sky-1:#7fc8ff;
-      --sky-2:#cfefff;
-      --sky-3:#eaf7ff;
+      --sky1:#89d2ff;
+      --sky2:#d9f2ff;
+      --sky3:#f3fbff;
 
-      --text:#f5f6ff;
-      --ink:#0f172a;
+      --text:#f5f7ff;
+      --ink:#0b1220;
 
       --paper:#fffdf7;
-      --paper-edge:#e9e2d3;
 
-      --cookie-1:#e6c089;
-      --cookie-2:#d3a062;
-      --cookie-3:#b67b3b;
+      --cookieA:#f2d1a2;
+      --cookieB:#d7a76b;
+      --cookieC:#b87c3d;
 
-      --shadow: rgba(0,0,0,.35);
+      --shadow: rgba(0,0,0,.28);
+      --cardShadow: 0 18px 34px rgba(0,0,0,.18);
       --radius: 18px;
     }
 
     *{ box-sizing:border-box; }
-    html,body{ height:100%; margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    html,body{ height:100%; margin:0; font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial; }
+
+    /* Fullscreen stage */
     body{
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
       overflow:hidden;
       color:var(--text);
       background:
-        radial-gradient(900px 700px at 50% 30%, rgba(20,38,120,.35), transparent 60%),
-        radial-gradient(1200px 900px at 40% 70%, rgba(0,0,0,.45), transparent 60%),
-        linear-gradient(180deg, var(--night-2), var(--night-1), var(--night-3));
-      transition: background 950ms ease;
+        radial-gradient(900px 650px at 50% 20%, rgba(30,60,190,.22), transparent 60%),
+        radial-gradient(1100px 850px at 40% 80%, rgba(0,0,0,.45), transparent 60%),
+        linear-gradient(180deg, var(--night2), var(--night1), var(--night3));
+      transition: background 900ms ease;
     }
 
-    /* Tiny star field */
+    /* Tiny stars */
     .stars{
-      position:absolute; inset:-15%;
+      position:absolute; inset:-20%;
       pointer-events:none;
-      opacity:.85;
+      opacity:.95;
       background:
         radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,.85), transparent 60%),
         radial-gradient(1px 1px at 22% 48%, rgba(255,255,255,.55), transparent 60%),
@@ -62,7 +62,7 @@
         radial-gradient(1px 1px at 90% 28%, rgba(255,255,255,.7), transparent 60%),
         radial-gradient(1px 1px at 18% 82%, rgba(255,255,255,.6), transparent 60%),
         radial-gradient(1px 1px at 48% 88%, rgba(255,255,255,.5), transparent 60%);
-      animation: twinkle 7s ease-in-out infinite;
+      animation: twinkle 6.5s ease-in-out infinite;
       filter: blur(.15px);
     }
     @keyframes twinkle{
@@ -70,157 +70,101 @@
       50%{ opacity:.95; transform: translateY(-6px); }
     }
 
-    /* Sun rays shown after open */
+    /* Sun rays for day */
     .sunrays{
-      position:absolute; inset:-40%;
+      position:absolute; inset:-35%;
       pointer-events:none;
       opacity:0;
-      transform: scale(1.05);
       transition: opacity 900ms ease;
       background:
-        conic-gradient(from 210deg at 30% 20%,
-          rgba(255,255,255,.0) 0deg,
-          rgba(255,255,255,.18) 12deg,
-          rgba(255,255,255,.0) 28deg,
-          rgba(255,255,255,.14) 44deg,
-          rgba(255,255,255,.0) 62deg,
-          rgba(255,255,255,.12) 82deg,
-          rgba(255,255,255,.0) 110deg,
-          rgba(255,255,255,.15) 132deg,
-          rgba(255,255,255,.0) 165deg,
-          rgba(255,255,255,.10) 190deg,
-          rgba(255,255,255,.0) 240deg,
-          rgba(255,255,255,.12) 280deg,
-          rgba(255,255,255,.0) 360deg);
+        conic-gradient(from 215deg at 32% 18%,
+          rgba(255,255,255,0) 0deg,
+          rgba(255,255,255,.20) 14deg,
+          rgba(255,255,255,0) 30deg,
+          rgba(255,255,255,.14) 48deg,
+          rgba(255,255,255,0) 72deg,
+          rgba(255,255,255,.12) 96deg,
+          rgba(255,255,255,0) 130deg,
+          rgba(255,255,255,.16) 150deg,
+          rgba(255,255,255,0) 200deg,
+          rgba(255,255,255,.10) 230deg,
+          rgba(255,255,255,0) 360deg);
       filter: blur(1px);
     }
 
+    /* Layout: keep everything centered */
     .wrap{
       position:relative;
-      width:min(560px, 92vw);
-      padding: 22px 16px 22px;
-      text-align:center;
+      width:min(720px, 94vw);
+      display:grid;
+      grid-template-rows: auto auto auto;
+      justify-items:center;
+      gap: 14px;
       z-index:2;
+      padding: 22px 12px;
     }
+
     .subtitle{
-      margin:0 0 14px;
+      margin:0;
       font-size: 13px;
       opacity:.82;
+      text-align:center;
     }
 
     /* Cookie button */
     .cookieBtn{
       border:0;
-      background: transparent;
+      background:transparent;
       cursor:pointer;
-      padding: 0;
-      outline:none;
+      padding:0;
       -webkit-tap-highlight-color: transparent;
       user-select:none;
       touch-action: manipulation;
     }
 
     .cookieStage{
-      width:min(280px, 70vw);
-      height:min(260px, 66vw);
-      margin: 4px auto 10px;
-      position:relative;
+      width:min(340px, 78vw);
+      height:min(260px, 56vw);
+      display:grid;
+      place-items:center;
       filter: drop-shadow(0 18px 28px var(--shadow));
     }
 
-    /* Fortune cookie (closed) - stylized, not a circle */
-    .cookieClosed{
-      position:absolute;
-      left:50%;
-      top:50%;
-      width: 250px;
-      height: 190px;
-      transform: translate(-50%,-52%);
-      border-radius: 999px;
-      background: transparent;
-    }
-    .cookieClosed::before,
-    .cookieClosed::after{
-      content:"";
-      position:absolute;
-      inset: 0;
-      border-radius: 999px;
-      background:
-        radial-gradient(120px 90px at 35% 35%, rgba(255,255,255,.22), transparent 62%),
-        radial-gradient(140px 120px at 60% 70%, rgba(0,0,0,.18), transparent 62%),
-        linear-gradient(135deg, var(--cookie-1), var(--cookie-2), var(--cookie-3));
-      clip-path: polygon(50% 8%, 90% 28%, 96% 55%, 86% 78%, 55% 92%, 50% 92%, 45% 92%, 14% 78%, 4% 55%, 10% 28%);
-      box-shadow: inset 0 0 0 2px rgba(255,255,255,.08);
-    }
-    /* “Fold” line */
-    .cookieClosed .fold{
-      position:absolute;
-      left:50%;
-      top:18%;
-      width: 78%;
-      height: 68%;
-      transform: translateX(-50%);
-      border-radius: 999px;
-      border: 2px solid rgba(255,255,255,.10);
-      opacity:.6;
-      clip-path: polygon(10% 8%, 90% 8%, 96% 52%, 90% 92%, 10% 92%, 4% 52%);
+    /* SVG sizing */
+    svg.cookieSvg{
+      width: 100%;
+      max-width: 340px;
+      height: auto;
+      overflow: visible;
     }
 
-    /* Open state cookie halves */
-    .half{
-      position:absolute;
-      left:50%;
-      top:50%;
-      width: 180px;
-      height: 160px;
-      transform: translate(-50%,-52%) scale(.98);
-      border-radius: 999px;
-      opacity:0;
-      transition: transform 720ms ease, opacity 380ms ease;
-      background:
-        radial-gradient(110px 90px at 35% 35%, rgba(255,255,255,.22), transparent 62%),
-        radial-gradient(140px 120px at 60% 70%, rgba(0,0,0,.18), transparent 62%),
-        linear-gradient(135deg, var(--cookie-1), var(--cookie-2), var(--cookie-3));
-      box-shadow: inset 0 0 0 2px rgba(255,255,255,.08);
-    }
-    .half.left{
-      clip-path: polygon(0% 10%, 100% 0%, 86% 100%, 0% 90%);
-      transform: translate(-50%,-52%) translateX(-6px) rotate(0deg) scale(.98);
-    }
-    .half.right{
-      clip-path: polygon(0% 0%, 100% 10%, 100% 90%, 14% 100%);
-      transform: translate(-50%,-52%) translateX(6px) rotate(0deg) scale(.98);
-    }
-
-    /* Paper appears in the center */
+    /* Paper card */
     .paper{
-      position: relative;
-      margin: 12px auto 0;
-      width: min(460px, 92vw);
+      width: min(520px, 94vw);
       background: linear-gradient(180deg, var(--paper), #fff);
       color: var(--ink);
       border-radius: var(--radius);
-      border: 1px solid rgba(15,23,42,.12);
-      box-shadow: 0 18px 32px rgba(0,0,0,.18);
+      box-shadow: var(--cardShadow);
+      border: 1px solid rgba(11,18,32,.10);
       padding: 18px 16px;
-      opacity: 0;
-      transform: translateY(10px) scale(.98);
-      transition: opacity 540ms ease, transform 540ms ease;
+      opacity:0;
+      transform: translateY(10px) scale(.985);
+      transition: opacity 520ms ease, transform 520ms ease;
+      text-align:center;
     }
+
     .fortune{
-      font-size: clamp(16px, 2.5vw, 19px);
-      line-height: 1.5;
-      margin: 0;
-      padding: 0 6px;
-      font-weight: 600;
+      margin:0;
+      font-size: clamp(16px, 2.6vw, 20px);
+      line-height: 1.45;
+      font-weight: 700;
     }
     .hint{
       margin-top: 10px;
       font-size: 12px;
-      opacity: .72;
+      opacity:.7;
     }
 
-    .soundRow{ display:flex; justify-content:center; margin-top: 10px; }
     .soundBtn{
       border: 1px solid rgba(255,255,255,.22);
       background: rgba(255,255,255,.06);
@@ -233,31 +177,60 @@
     }
     .soundBtn[aria-pressed="true"]{ background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.32); }
 
-    /* Opened state */
+    /* Opened state (day sky) */
     body.opened{
       background:
-        radial-gradient(900px 700px at 25% 20%, rgba(255,255,255,.55), transparent 55%),
-        radial-gradient(1200px 900px at 60% 70%, rgba(255,255,255,.18), transparent 60%),
-        linear-gradient(180deg, var(--sky-1), var(--sky-2), var(--sky-3));
+        radial-gradient(900px 650px at 28% 18%, rgba(255,255,255,.70), transparent 55%),
+        radial-gradient(1000px 800px at 70% 72%, rgba(255,255,255,.22), transparent 60%),
+        linear-gradient(180deg, var(--sky1), var(--sky2), var(--sky3));
       color: var(--ink);
     }
     body.opened .stars{ opacity:0; transition: opacity 500ms ease; }
-    body.opened .sunrays{ opacity:.85; }
-    body.opened .soundBtn{ border-color: rgba(15,23,42,.14); background: rgba(15,23,42,.06); color: var(--ink); }
-    body.opened .soundBtn[aria-pressed="true"]{ background: rgba(15,23,42,.12); border-color: rgba(15,23,42,.18); }
+    body.opened .sunrays{ opacity:.9; }
+    body.opened .soundBtn{
+      border-color: rgba(11,18,32,.14);
+      background: rgba(11,18,32,.06);
+      color: var(--ink);
+    }
+    body.opened .soundBtn[aria-pressed="true"]{
+      background: rgba(11,18,32,.12);
+      border-color: rgba(11,18,32,.18);
+    }
 
-    body.opened .cookieClosed{ opacity:0; transition: opacity 250ms ease; }
-    body.opened .half{ opacity:1; }
-    body.opened .half.left{ transform: translate(-50%,-52%) translateX(-46px) rotate(-14deg) scale(1); }
-    body.opened .half.right{ transform: translate(-50%,-52%) translateX(46px) rotate(14deg) scale(1); }
+    /* SVG animation: closed -> open */
+    .closedGroup{ opacity:1; transition: opacity 240ms ease; }
+    .openGroup{ opacity:0; transition: opacity 240ms ease; }
 
-    body.opened .paper{ opacity:1; transform: translateY(0) scale(1); }
+    body.opened .closedGroup{ opacity:0; }
+    body.opened .openGroup{ opacity:1; }
+
+    /* Open halves movement */
+    .halfLeft{
+      transform-box: fill-box;
+      transform-origin: center;
+      transform: translateX(0px) rotate(0deg);
+      transition: transform 720ms ease;
+    }
+    .halfRight{
+      transform-box: fill-box;
+      transform-origin: center;
+      transform: translateX(0px) rotate(0deg);
+      transition: transform 720ms ease;
+    }
+    body.opened .halfLeft{ transform: translateX(-56px) rotate(-12deg); }
+    body.opened .halfRight{ transform: translateX(56px) rotate(12deg); }
+
+    body.opened .paper{
+      opacity:1;
+      transform: translateY(0px) scale(1);
+    }
 
     @media (prefers-reduced-motion: reduce){
       *{ animation:none !important; transition:none !important; }
     }
   </style>
 </head>
+
 <body>
   <div class="stars" aria-hidden="true"></div>
   <div class="sunrays" aria-hidden="true"></div>
@@ -267,35 +240,70 @@
 
     <button class="cookieBtn" id="cookieBtn" aria-label="Open the fortune cookie">
       <div class="cookieStage">
-        <div class="cookieClosed" aria-hidden="true">
-          <div class="fold" aria-hidden="true"></div>
-        </div>
+        <!-- Fortune cookie SVG (stylized) -->
+        <svg class="cookieSvg" viewBox="0 0 520 380" role="img" aria-label="Fortune cookie">
+          <defs>
+            <linearGradient id="cookieGrad" x1="0" x2="1">
+              <stop offset="0" stop-color="var(--cookieA)"/>
+              <stop offset=".55" stop-color="var(--cookieB)"/>
+              <stop offset="1" stop-color="var(--cookieC)"/>
+            </linearGradient>
+            <radialGradient id="shine" cx="35%" cy="30%" r="70%">
+              <stop offset="0" stop-color="rgba(255,255,255,.30)"/>
+              <stop offset=".6" stop-color="rgba(255,255,255,0)"/>
+            </radialGradient>
+          </defs>
 
-        <div class="half left" aria-hidden="true"></div>
-        <div class="half right" aria-hidden="true"></div>
+          <!-- CLOSED -->
+          <g class="closedGroup">
+            <!-- left wing -->
+            <path d="M85 215 C110 110, 215 70, 300 95 C250 150, 205 215, 190 290 C140 285, 95 262, 85 215 Z"
+                  fill="url(#cookieGrad)"/>
+            <!-- right wing -->
+            <path d="M435 215 C410 110, 305 70, 220 95 C270 150, 315 215, 330 290 C380 285, 425 262, 435 215 Z"
+                  fill="url(#cookieGrad)"/>
+            <!-- middle fold shadow -->
+            <path d="M245 110 C260 150, 260 230, 240 300 C270 300, 285 230, 275 150 C270 125, 260 110, 245 110 Z"
+                  fill="rgba(0,0,0,.12)"/>
+            <!-- highlight -->
+            <ellipse cx="200" cy="160" rx="120" ry="90" fill="url(#shine)"/>
+          </g>
+
+          <!-- OPEN -->
+          <g class="openGroup">
+            <g class="halfLeft">
+              <path d="M110 220 C120 135, 210 100, 295 118 C260 165, 220 220, 205 280 C165 280, 125 255, 110 220 Z"
+                    fill="url(#cookieGrad)"/>
+              <path d="M210 150 C200 175, 195 220, 198 260" stroke="rgba(255,255,255,.18)" stroke-width="6" stroke-linecap="round"/>
+            </g>
+            <g class="halfRight">
+              <path d="M410 220 C400 135, 310 100, 225 118 C260 165, 300 220, 315 280 C355 280, 395 255, 410 220 Z"
+                    fill="url(#cookieGrad)"/>
+              <path d="M310 150 C320 175, 325 220, 322 260" stroke="rgba(255,255,255,.18)" stroke-width="6" stroke-linecap="round"/>
+            </g>
+          </g>
+        </svg>
       </div>
     </button>
 
-    <div class="soundRow">
-      <button class="soundBtn" id="soundBtn" type="button" aria-pressed="true">🔊 Sound: ON</button>
-    </div>
+    <button class="soundBtn" id="soundBtn" type="button" aria-pressed="true">🔊 Sound: ON</button>
 
     <section class="paper" id="paper" aria-live="polite" aria-atomic="true">
       <p class="fortune" id="fortuneText"></p>
       <div class="hint">Refresh won’t change this message.</div>
     </section>
 
-    <!-- Use YOUR uploaded filenames -->
-    <audio id="audioCrack" preload="auto" src="crumple-92100.mp3"></audio>
-    <audio id="audioPaper" preload="auto" src="paper-rustle-81855.mp3"></audio>
+    <!-- Your uploaded filenames -->
+    <audio id="audioCrack" preload="auto" src="cookie-crack.mp3"></audio>
+    <audio id="audioPaper" preload="auto" src="paper-rustle.mp3"></audio>
   </main>
 
   <script>
     const FORTUNE_TEXT = "Your lucky break is closer than you think";
 
     const cookieBtn = document.getElementById("cookieBtn");
-    const paper = document.getElementById("paper");
     const fortuneTextEl = document.getElementById("fortuneText");
+    const paper = document.getElementById("paper");
 
     const soundBtn = document.getElementById("soundBtn");
     const audioCrack = document.getElementById("audioCrack");
@@ -312,28 +320,24 @@
       soundBtn.textContent = soundEnabled ? "🔊 Sound: ON" : "🔇 Sound: OFF";
     });
 
-    function safePlay(audioEl){
-      if(!soundEnabled) return;
-      if(!audioEl) return;
+    function safePlay(a){
+      if(!soundEnabled || !a) return;
       try{
-        audioEl.currentTime = 0;
-        const p = audioEl.play();
-        if(p && typeof p.catch === "function") p.catch(() => {});
+        a.currentTime = 0;
+        const p = a.play();
+        if(p && typeof p.catch === "function") p.catch(()=>{});
       }catch(e){}
     }
 
     cookieBtn.addEventListener("click", () => {
       if(opened) return;
       opened = true;
-
       document.body.classList.add("opened");
 
       safePlay(audioCrack);
       setTimeout(() => safePlay(audioPaper), 420);
 
-      setTimeout(() => {
-        paper.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 650);
+      // (scrollIntoView kaldırıldı — artık yukarı fırlamayacak)
     });
   </script>
 </body>
