@@ -12,7 +12,7 @@
     .container{
       position:fixed; inset:0;
       width:100%;
-      height:100dvh;
+      height:calc(var(--vh, 1vh) * 100);
       min-height:100svh;
       transition: background 1.5s ease;
     }
@@ -183,20 +183,20 @@
     /* Responsive tuning (Android için yazı yukarı kalsın) */
     @media (max-width: 768px){
       :root{
-        --cookieStageW: min(860px, 98vw);
-        --cookieScale: 1.45;
-        --cookieLift: -46px;
-        --paperOffset: 190px;
+        --cookieStageW: min(1050px, 99vw);
+        --cookieScale: 1.75;
+        --cookieLift: -40px;
+        --paperOffset: 170px;
       }
       .fortune-text{font-size:26px;}
       .fortune-paper{padding:26px 28px;}
     }
     @media (max-width: 480px){
       :root{
-        --cookieStageW: min(820px, 98vw);
-        --cookieScale: 1.52;
-        --cookieLift: -40px;
-        --paperOffset: 178px;
+        --cookieStageW: min(1100px, 99vw);
+        --cookieScale: 1.85;
+        --cookieLift: -34px;
+        --paperOffset: 160px;
       }
       .fortune-text{font-size:22px;}
       .fortune-paper{padding:22px 24px;}
@@ -342,6 +342,19 @@
     setTimeout(()=> document.body.classList.add('cracked'), 900);
     setTimeout(()=> document.body.classList.add('showMessage'), 1700);
   });
+  function setVH(){
+  const vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty('--vh', `${vh}px`);
+}
+setVH();
+window.addEventListener('resize', setVH);
+window.addEventListener('orientationchange', setVH);
+
+// Daha da stabil: Chrome address bar hareketleri için
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', setVH);
+}
+
 </script>
 </body>
 </html>
