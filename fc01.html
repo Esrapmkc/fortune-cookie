@@ -6,20 +6,17 @@
   <title>Your Fortune Cookie</title>
 
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family: Georgia, serif; overflow:hidden; background:#0a0a1a; }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family: Georgia, serif; overflow:hidden; background:#0a0a1a;}
 
-    /* Fullscreen stage */
     .container{
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100dvh;
-      min-height: 100svh;
+      position:fixed; inset:0;
+      width:100%;
+      height:100dvh;
+      min-height:100svh;
       transition: background 1.5s ease;
     }
 
-    /* Night / Day background */
     .night-sky{
       background:
         radial-gradient(900px 650px at 20% 25%, rgba(120,110,255,.18), transparent 60%),
@@ -27,7 +24,6 @@
         radial-gradient(1000px 800px at 55% 90%, rgba(0,0,0,.6), transparent 65%),
         linear-gradient(to bottom, #070718 0%, #0f1230 50%, #101a3a 100%);
     }
-
     .day-sky{
       background:
         radial-gradient(900px 650px at 25% 18%, rgba(255,255,220,.55), transparent 55%),
@@ -36,71 +32,71 @@
     }
 
     /* Stars */
-    .stars{
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      transition:opacity 1.2s ease;
-      opacity:.80;
-    }
-    .star{
-      position:absolute;
-      background:white;
-      border-radius:50%;
-      opacity:0;
-      animation: twinkle 3s infinite ease-in-out;
-      filter: blur(.2px);
-    }
-    @keyframes twinkle{
-      0%,100%{opacity:.18;transform:scale(1)}
-      50%{opacity:.65;transform:scale(1.15)}
-    }
+    .stars{position:absolute; inset:0; pointer-events:none; transition:opacity 1.2s ease; opacity:.80;}
+    .star{position:absolute; background:white; border-radius:50%; opacity:0; animation: twinkle 3s infinite ease-in-out; filter: blur(.2px);}
+    @keyframes twinkle{0%,100%{opacity:.18;transform:scale(1)}50%{opacity:.65;transform:scale(1.15)}}
 
     /* Sunlight */
-    .sunlight{
-      position:absolute;
-      inset:0;
-      opacity:0;
-      pointer-events:none;
-      transition:opacity 1.5s ease;
-    }
-    .sunlight.visible{ opacity:1; }
+    .sunlight{position:absolute; inset:0; opacity:0; pointer-events:none; transition:opacity 1.5s ease;}
+    .sunlight.visible{opacity:1}
+    .sun-ray{position:absolute; background: radial-gradient(circle, rgba(255,255,200,0.30) 0%, transparent 70%); border-radius:50%; animation:pulse 5s infinite ease-in-out; filter: blur(.2px);}
+    @keyframes pulse{0%,100%{transform:scale(1);opacity:.25}50%{transform:scale(1.08);opacity:.55}}
 
-    .sun-ray{
+    /* Clouds (geri geldi) */
+    .cloud{
       position:absolute;
-      background: radial-gradient(circle, rgba(255,255,200,0.30) 0%, transparent 70%);
-      border-radius:50%;
-      animation:pulse 5s infinite ease-in-out;
+      background: rgba(255,255,255,.55);
+      border-radius:100px;
+      opacity:0;
+      transition: opacity 1.2s ease;
+      animation: float 20s infinite ease-in-out;
       filter: blur(.2px);
     }
-    @keyframes pulse{
-      0%,100%{transform:scale(1);opacity:.25}
-      50%{transform:scale(1.08);opacity:.55}
+    .cloud::before,.cloud::after{
+      content:'';
+      position:absolute;
+      background: rgba(255,255,255,.55);
+      border-radius:100px;
+    }
+    .cloud::before{width:50px;height:50px;top:-25px;left:10px}
+    .cloud::after{width:60px;height:60px;top:-30px;right:10px}
+    @keyframes float{
+      0%,100%{ transform: translateX(0) translateY(0); }
+      50%{ transform: translateX(30px) translateY(-10px); }
     }
 
-    /* Center layout (no pushing down) */
+    /* ====== LAYOUT: her şey fixed, reflow yok ====== */
+    :root{
+      /* Kurabiye büyük, yazı daha yukarı */
+      --cookieStageW: min(920px, 98vw);
+      --cookieScale: 1.38;            /* Canva SVG boşluğunu telafi eder */
+      --cookieLift: -52px;            /* kurabiye biraz yukarı */
+      --paperOffset: 205px;           /* merkezden aşağı: yazı kurabiyeye yakın */
+    }
+
     .center{
-      position: fixed;
-      inset: 0;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      color:#f5f7ff;
-      pointer-events:none; /* only cookieBtn/paper will override */
-      padding: 18px;
+      position:fixed; inset:0;
+      display:block;
     }
 
     .subtitle{
+      position:fixed;
+      left:50%;
+      top: 34px;
+      transform: translateX(-50%);
       font-size:13px;
       opacity:.84;
-      margin-bottom: 12px;
+      color:#f5f7ff;
+      text-align:center;
       pointer-events:none;
     }
+    body.day .subtitle{ color:#0b1220; }
 
-    /* Cookie */
     .cookieBtn{
+      position:fixed;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%) translateY(var(--cookieLift));
       border:0;
       background:transparent;
       cursor:pointer;
@@ -108,63 +104,64 @@
       -webkit-tap-highlight-color: transparent;
       user-select:none;
       touch-action: manipulation;
-      pointer-events:auto; /* clickable */
     }
 
     .cookieStage{
-      position: relative;
-      width: min(820px, 96vw);  /* ✅ bigger */
+      position:relative;
+      width: var(--cookieStageW);
       aspect-ratio: 4 / 3;
-      margin-top: -34px;        /* ✅ a bit higher */
       filter: drop-shadow(0 18px 42px rgba(0,0,0,0.45));
     }
 
-    /* Two SVGs stacked */
+    /* Canva SVG’ler (WHITESPACE TELAFİSİ = scale) */
     .cookieImg{
       position:absolute;
       left:50%;
       top:50%;
-      transform: translate(-50%,-50%);
-      width: 100%;
-      height: auto;
-      opacity: 0;
-      transition: transform 1.6s ease, opacity 1.0s ease, filter 1.0s ease;
+      width:100%;
+      height:auto;
+      opacity:0;
+      transform: translate(-50%,-50%) scale(var(--cookieScale));
+      transition: transform 1.6s ease, opacity 0.9s ease, filter 0.9s ease;
       will-change: transform, opacity;
     }
-    .cookieClosed{ opacity:1; }
-    .cookieOpen{ opacity:0; transform: translate(-50%,-50%) scale(.98); }
+    .cookieClosed{opacity:1;}
+    .cookieOpen{opacity:0; transform: translate(-50%,-50%) scale(calc(var(--cookieScale) * 0.98));}
 
-    /* Opening / swap */
+    /* Kırılma/swap */
     body.opening .cookieClosed{
-      transform: translate(-50%,-50%) scale(1.03) rotate(-1.5deg);
+      transform: translate(-50%,-50%) scale(calc(var(--cookieScale) * 1.03)) rotate(-1.2deg);
       filter: blur(.2px);
     }
     body.cracked .cookieClosed{
       opacity:0;
-      transform: translate(-50%,-50%) scale(0.98);
+      transform: translate(-50%,-50%) scale(calc(var(--cookieScale) * 0.98));
     }
     body.cracked .cookieOpen{
       opacity:1;
-      transform: translate(-50%,-50%) scale(1.00);
+      transform: translate(-50%,-50%) scale(var(--cookieScale));
     }
 
-    /* Fortune paper */
+    /* Fortune paper: BAŞTAN BERİ MERKEZE BAĞLI, ZIPLAMA YOK */
     .fortune-paper{
-      margin-top: 26px;         /* ✅ under cookie */
+      position:fixed;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%) translateY(var(--paperOffset)) translateY(10px) scale(.985);
       background: linear-gradient(to bottom, #FFF9E6 0%, #FFF5D6 100%);
       padding: 34px 42px;
       border-radius: 12px;
       box-shadow: 0 18px 42px rgba(0,0,0,0.22);
-      opacity: 0;
-      transform: translateY(12px) scale(.985);
+      opacity:0;
       transition: transform 1.0s ease, opacity 1.0s ease;
       max-width: min(920px, 92vw);
       color:#1f2f3f;
-      pointer-events:auto;
+      text-align:center;
+      pointer-events:none;
     }
     body.showMessage .fortune-paper{
       opacity:1;
-      transform:none;
+      transform: translate(-50%,-50%) translateY(var(--paperOffset)) scale(1);
     }
 
     .fortune-text{
@@ -176,43 +173,33 @@
     }
 
     /* Crumbs */
-    .crumb{
-      position:absolute;
-      border-radius:50%;
-      opacity:0;
-      pointer-events:none;
-      box-shadow:0 2px 4px rgba(0,0,0,0.2);
-      z-index: 20;
-    }
+    .crumb{position:absolute; border-radius:50%; opacity:0; pointer-events:none; box-shadow:0 2px 4px rgba(0,0,0,0.2); z-index:30;}
     @keyframes crumb-fall{
       0%{transform:translate(0,0) rotate(0deg) scale(1);opacity:0}
       10%{opacity:1}
       100%{transform:translate(var(--tx), var(--ty)) rotate(720deg) scale(0.65);opacity:0}
     }
 
-    /* Day text color */
-    body.day .center{ color:#0b1220; }
-    body.day .subtitle{ color:#0b1220; }
-
-    /* Responsive */
+    /* Responsive tuning (Android için yazı yukarı kalsın) */
     @media (max-width: 768px){
-      .cookieStage{ width:min(700px, 98vw); margin-top:-28px; }
-      .fortune-paper{ padding:26px 28px; margin-top:18px; }
-      .fortune-text{ font-size:26px; }
+      :root{
+        --cookieStageW: min(860px, 98vw);
+        --cookieScale: 1.45;
+        --cookieLift: -46px;
+        --paperOffset: 190px;
+      }
+      .fortune-text{font-size:26px;}
+      .fortune-paper{padding:26px 28px;}
     }
     @media (max-width: 480px){
-      .cookieStage{ width:min(520px, 96vw); margin-top:-18px; }
-      .fortune-paper{ padding:22px 24px; }
-      .fortune-text{ font-size:22px; }
-    }
-
-    /* Optional subtle breathe before click */
-    @keyframes breathe {
-      0%,100% { transform: translate(-50%,-50%) scale(1); }
-      50% { transform: translate(-50%,-50%) scale(1.02); }
-    }
-    body:not(.cracked) .cookieClosed{
-      animation: breathe 4.2s ease-in-out infinite;
+      :root{
+        --cookieStageW: min(820px, 98vw);
+        --cookieScale: 1.52;
+        --cookieLift: -40px;
+        --paperOffset: 178px;
+      }
+      .fortune-text{font-size:22px;}
+      .fortune-paper{padding:22px 24px;}
     }
   </style>
 </head>
@@ -227,8 +214,8 @@
 
       <button class="cookieBtn" id="cookieBtn" aria-label="Open the fortune cookie">
         <div class="cookieStage" id="cookieStage">
-          <img class="cookieImg cookieClosed" id="cookieClosed" src="cookie-closed.svg" alt="Fortune cookie closed">
-          <img class="cookieImg cookieOpen" id="cookieOpen" src="cookie-open.svg" alt="Fortune cookie opened">
+          <img class="cookieImg cookieClosed" src="cookie-closed.svg" alt="Fortune cookie closed">
+          <img class="cookieImg cookieOpen"   src="cookie-open.svg"   alt="Fortune cookie opened">
         </div>
       </button>
 
@@ -241,116 +228,120 @@
     </div>
   </div>
 
-  <script>
-    // Stars
-    const starsContainer = document.getElementById('stars');
-    for(let i=0;i<90;i++){
-      const s=document.createElement('div');
-      s.className='star';
-      const size=Math.random()*2+1;
-      s.style.width=size+'px';
-      s.style.height=size+'px';
-      s.style.left=Math.random()*100+'%';
-      s.style.top=Math.random()*100+'%';
-      s.style.animationDelay=Math.random()*3+'s';
-      starsContainer.appendChild(s);
+<script>
+  // Stars
+  const starsContainer = document.getElementById('stars');
+  for(let i=0;i<90;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    const size=Math.random()*2+1;
+    s.style.width=size+'px';
+    s.style.height=size+'px';
+    s.style.left=Math.random()*100+'%';
+    s.style.top=Math.random()*100+'%';
+    s.style.animationDelay=Math.random()*3+'s';
+    starsContainer.appendChild(s);
+  }
+
+  // Sun rays + clouds
+  const sunlightContainer = document.getElementById('sunlight');
+  for(let i=0;i<12;i++){
+    const ray=document.createElement('div');
+    ray.className='sun-ray';
+    const size=Math.random()*320+160;
+    ray.style.width=size+'px';
+    ray.style.height=size+'px';
+    ray.style.left=Math.random()*100+'%';
+    ray.style.top=Math.random()*100+'%';
+    ray.style.animationDelay=Math.random()*5+'s';
+    sunlightContainer.appendChild(ray);
+  }
+  for(let i=0;i<5;i++){
+    const cloud=document.createElement('div');
+    cloud.className='cloud';
+    cloud.style.width=(Math.random()*80+60)+'px';
+    cloud.style.height=(Math.random()*30+25)+'px';
+    cloud.style.left=Math.random()*100+'%';
+    cloud.style.top=(Math.random()*55+10)+'%';
+    cloud.style.animationDelay=(Math.random()*10)+'s';
+    cloud.style.animationDuration=(Math.random()*10+15)+'s';
+    sunlightContainer.appendChild(cloud);
+  }
+
+  const cookieBtn = document.getElementById('cookieBtn');
+  const cookieStage = document.getElementById('cookieStage');
+  const background = document.getElementById('background');
+
+  const audioCrack = document.getElementById('audioCrack');
+  const audioPaper = document.getElementById('audioPaper');
+
+  let opened=false;
+
+  function safePlay(a){
+    try{
+      a.currentTime=0;
+      const p=a.play();
+      if(p && typeof p.catch==="function") p.catch(()=>{});
+    }catch(e){}
+  }
+
+  function createCrumbs(){
+    const colors=['#E8B968','#DDB56A','#D4A259','#C9A355','#B8944D'];
+    const rect=cookieStage.getBoundingClientRect();
+    const originX=rect.left+rect.width/2;
+    const originY=rect.top+rect.height/2+10;
+
+    for(let i=0;i<55;i++){
+      const c=document.createElement('div');
+      c.className='crumb';
+
+      const size=Math.random()*10+4;
+      c.style.width=size+'px';
+      c.style.height=size+'px';
+      c.style.left=originX+'px';
+      c.style.top=originY+'px';
+      c.style.background=colors[Math.floor(Math.random()*colors.length)];
+
+      const tx=(Math.random()-0.5)*520;
+      const ty=Math.random()*420+220;
+      c.style.setProperty('--tx', tx+'px');
+      c.style.setProperty('--ty', ty+'px');
+
+      const dur=Math.random()*1.1+2.2;
+      c.style.animation=`crumb-fall ${dur}s ease-out forwards`;
+      c.style.animationDelay=(Math.random()*0.25)+'s';
+
+      document.body.appendChild(c);
+      setTimeout(()=>c.remove(), 4200);
     }
+  }
 
-    // Sun rays
-    const sunlightContainer = document.getElementById('sunlight');
-    for(let i=0;i<12;i++){
-      const ray=document.createElement('div');
-      ray.className='sun-ray';
-      const size=Math.random()*320+160;
-      ray.style.width=size+'px';
-      ray.style.height=size+'px';
-      ray.style.left=Math.random()*100+'%';
-      ray.style.top=Math.random()*100+'%';
-      ray.style.animationDelay=Math.random()*5+'s';
-      sunlightContainer.appendChild(ray);
-    }
+  cookieBtn.addEventListener('click', ()=>{
+    if(opened) return;
+    opened=true;
 
-    const cookieBtn = document.getElementById('cookieBtn');
-    const cookieStage = document.getElementById('cookieStage');
-    const background = document.getElementById('background');
-    const fortunePaper = document.getElementById('fortunePaper');
+    document.body.classList.add('opening');
 
-    const audioCrack = document.getElementById('audioCrack');
-    const audioPaper = document.getElementById('audioPaper');
+    safePlay(audioCrack);
+    setTimeout(()=>safePlay(audioPaper), 650);
 
-    let opened=false;
+    createCrumbs();
 
-    function safePlay(a){
-      try{
-        a.currentTime=0;
-        const p=a.play();
-        if(p && typeof p.catch==="function") p.catch(()=>{});
-      }catch(e){}
-    }
+    setTimeout(()=>{
+      background.classList.remove('night-sky');
+      background.classList.add('day-sky');
+      starsContainer.style.opacity='0';
+      sunlightContainer.classList.add('visible');
 
-    function createCrumbs(){
-      const colors=['#E8B968','#DDB56A','#D4A259','#C9A355','#B8944D'];
-      const rect=cookieStage.getBoundingClientRect();
-      const originX=rect.left+rect.width/2;
-      const originY=rect.top+rect.height/2+10;
+      // clouds visible
+      sunlightContainer.querySelectorAll('.cloud').forEach(cl=>cl.style.opacity='1');
 
-      for(let i=0;i<55;i++){
-        const c=document.createElement('div');
-        c.className='crumb';
+      document.body.classList.add('day');
+    }, 520);
 
-        const size=Math.random()*10+4;
-        c.style.width=size+'px';
-        c.style.height=size+'px';
-        c.style.left=originX+'px';
-        c.style.top=originY+'px';
-        c.style.background=colors[Math.floor(Math.random()*colors.length)];
-
-        const tx=(Math.random()-0.5)*520;
-        const ty=Math.random()*420+220;
-        c.style.setProperty('--tx', tx+'px');
-        c.style.setProperty('--ty', ty+'px');
-
-        const dur=Math.random()*1.1+2.2;
-        c.style.animation=`crumb-fall ${dur}s ease-out forwards`;
-        c.style.animationDelay=(Math.random()*0.25)+'s';
-
-        document.body.appendChild(c);
-        setTimeout(()=>c.remove(), 4200);
-      }
-    }
-
-    cookieBtn.addEventListener('click', ()=>{
-      if(opened) return;
-      opened=true;
-
-      document.body.classList.add('opening');
-
-      // sound
-      safePlay(audioCrack);
-      setTimeout(()=>safePlay(audioPaper), 650);
-
-      // crumbs
-      createCrumbs();
-
-      // background switch
-      setTimeout(()=>{
-        background.classList.remove('night-sky');
-        background.classList.add('day-sky');
-        starsContainer.style.opacity='0';
-        sunlightContainer.classList.add('visible');
-        document.body.classList.add('day');
-      }, 520);
-
-      // swap visuals (closed -> open)
-      setTimeout(()=>{
-        document.body.classList.add('cracked');
-      }, 900);
-
-      // show message
-      setTimeout(()=>{
-        document.body.classList.add('showMessage');
-      }, 1700);
-    });
-  </script>
+    setTimeout(()=> document.body.classList.add('cracked'), 900);
+    setTimeout(()=> document.body.classList.add('showMessage'), 1700);
+  });
+</script>
 </body>
 </html>
