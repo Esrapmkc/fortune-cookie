@@ -15,9 +15,9 @@
     }
 
     .container{
-      width:100vw;
-      height:100vh;
-      position:relative;
+      width:100%;
+      height:100dvh;
+      position:fixed;
       transition: background 1.5s ease;
       display:flex;
       align-items:center;
@@ -116,8 +116,8 @@
 
     /* ===== Cookie container ===== */
     .cookie-container{
-      position:absolute;
-      top:45%;
+      position:fixed;
+      top:50%;
       left:50%;
       transform:translate(-50%,-50%);
       cursor:pointer;
@@ -155,7 +155,7 @@
     /* ===== Fortune paper ===== */
     .fortune-paper{
       position:absolute;
-      top:72%;
+      top:calc(50% + 170px);
       left:50%;
       transform:translate(-50%,-50%) scale(0.95);
       background: linear-gradient(to bottom, #FFF9E6 0%, #FFF5D6 100%);
